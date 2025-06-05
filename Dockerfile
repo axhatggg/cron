@@ -9,24 +9,29 @@ RUN apt-get update && apt-get install -y \
     libnss3 libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 xdg-utils \
     libgbm-dev libxshmfence-dev --no-install-recommends
 
-# Install Chrome
+# Install Google Chrome
 RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google.gpg && \
     echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list && \
     apt-get update && apt-get install -y google-chrome-stable
 
-# Install ChromeDriver
-RUN LATEST=$(curl -sSL https://chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
-    wget https://chromedriver.storage.googleapis.com/${LATEST}/chromedriver_linux64.zip && \
-    unzip chromedriver_linux64.zip && mv chromedriver /usr/local/bin/ && chmod +x /usr/local/bin/chromedriver
+# Install the matching version of ChromeDriver
+RUN CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+') && \
+    DRIVER_URL="https://chromedriver.storage.googleapis.com" && \
+    LATEST=$(curl -sSL "$DRIVER_URL/LATEST_RELEASE_$CHROME_VERSION") && \
+    wget "$DRIVER_URL/$LATEST/chromedriver_linux64.zip" && \
+    unzip chromedriver_linux64.zip && \
+    mv chromedriver /usr/local/bin/ && chmod +x /usr/local/bin/chromedriver && \
+    rm chromedriver_linux64.zip
 
 # Set display port for headless Chrome
 ENV DISPLAY=:99
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy your script
 COPY scrape.py .
 
+# Run the scraper
 CMD ["python", "scrape.py"]
