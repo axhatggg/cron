@@ -1,0 +1,10 @@
+services:
+  - type: cron
+    name: scholarship-scraper
+    env: docker
+    schedule: "0 5 * * *"  # runs daily at 5 AM UTC
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: MONGO_URI
+        value: "mongodb+srv://akshatgupta9612:SMAA51933@cluster0.5wfkz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
